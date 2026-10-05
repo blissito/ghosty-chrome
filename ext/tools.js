@@ -1160,7 +1160,6 @@ export function buildTools(host) {
       },
       execute: timed("read_page", async ({ depth, boxes }, call) => {
         const tabId = await guardTab(call);
-        void cursor(tabId, "pulse", { label: "leyendo…" });
         return await snapshot(tabId, { depth: Number(depth) || undefined, boxes: !!boxes });
       }),
     },
@@ -1170,7 +1169,6 @@ export function buildTools(host) {
       inputSchema: { type: "object", properties: { query: { type: "string" } }, required: ["query"] },
       execute: timed("find", async ({ query }, call) => {
         const tabId = await guardTab(call);
-        void cursor(tabId, "pulse", { label: "buscando…" });
         const snap = await snapshot(tabId, { raw: true });
         // Primero aquí, por texto, rol y nombre accesible (~100 ms). Si hay una coincidencia clara, ésa
         // es; si no, subllamada al modelo por gs (4 s máx.) y, sin respuesta, lo mejor que hubo aquí.
@@ -1490,7 +1488,6 @@ export function buildTools(host) {
       inputSchema: { type: "object", properties: { maxChars: { type: "number", description: "default 15000, máx 40000" } } },
       execute: timed("get_page_text", async ({ maxChars }, call) => {
         const tabId = await guardTab(call);
-        void cursor(tabId, "pulse", { label: "leyendo…" });
         await chrome.scripting.executeScript({ target: { tabId }, files: ["vendor/readability/Readability.js"] }).catch(() => {});
         const page = await exec(tabId, pageReadable, [Math.min(Number(maxChars) || 15_000, 40_000)]);
         if (page?.text) page.text = maskSecrets(page.text);
@@ -1510,10 +1507,24 @@ export function buildTools(host) {
     {
       name: "take_screenshot",
       description: "Take a screenshot of the current page. You can't perform actions based on the screenshot, use read_page for actions. The screenshot is also kept for attach_image.",
-      inputSchema: { type: "object", properties: {} },
-      execute: timed("take_screenshot", async (_in, call) => {
+      inputSchema: { type: "object", properties: { clean: { type: "boolean", description: "Sin el cursor, la pastilla, el borde ni «Detener» de Ghosty (para docs y comparaciones visuales)." } } },
+      execute: timed("take_screenshot", async ({ clean } = {}, call) => {
         const tabId = await guardTab(call);
-        const shot = await capture(tabId);
+        // `clean`: el overlay de Ghosty se esconde SÓLO durante la captura.
+        const overlay = (show) => exec(tabId, (on) => {
+          const h = globalThis.__fxCursor?.host;
+          if (h) h.style.visibility = on ? "" : "hidden";
+        }, [show]).catch(() => {});
+        if (clean) {
+          await overlay(false);
+          await sleep(60); // un cuadro pintado sin el overlay
+        }
+        let shot;
+        try {
+          shot = await capture(tabId);
+        } finally {
+          if (clean) await overlay(true);
+        }
         const text = `Screenshot ${shot.width}×${shot.height} of ${shot.url} (saved for attach_image as site ${shot.site})`;
         return host.vision ? { type: "libfx.tool-result", text, images: [{ type: "image", data: shot.dataUrl.split(",")[1], mimeType: "image/jpeg" }] } : text;
       }),

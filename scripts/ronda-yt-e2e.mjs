@@ -146,6 +146,37 @@ const up = await tool("browser_file_upload", { tabId, paths: [join(FIX, "ronda.h
 const fname = await pg.evaluate(() => document.getElementById("estado-archivo").textContent);
 check("R17 el clic intercepta el selector y file_upload sin target lo llena", /selector de archivos/.test(r) && /interceptado/.test(up) && fname === "ronda.html", `${fname} · ${r.split("\n").find((l) => /📎/.test(l)) ?? r.slice(0, 80)}`);
 
+// ── Lecturas sin cursor (en video parecían acciones) y captura limpia ──
+const lec = await tool("browser_tabs", { action: "new", url: `${BASE}/partners.html`, background: true });
+const tabL = Number(/tabId["\s:]*(\d+)/.exec(lec)?.[1] ?? /Opened tabId (\d+)/.exec(lec)?.[1]);
+await new Promise((res) => setTimeout(res, 600));
+for (const [name, args] of [["browser_read_page", {}], ["browser_find", { query: "Elegir distribución" }], ["browser_get_page_text", {}], ["browser_take_screenshot", {}]]) await tool(name, { tabId: tabL, ...args });
+const pgL = await pageOf("partners.html");
+// El overlay (borde lila) sí sale en cada paso; lo que no debe salir es el CURSOR (`.c` sin «off`»).
+// Vive en un shadow root cerrado: se mira con CDP (pierce).
+const cursorShown = async (pgX) => {
+  const cdpS = await pgX.createCDPSession();
+  const { root } = await cdpS.send("DOM.getDocument", { depth: -1, pierce: true });
+  const found = [];
+  const walk = (n) => {
+    const a = n.attributes ?? [];
+    const cls = a[a.indexOf("class") + 1];
+    if (a.includes("class") && /^c( |$)/.test(cls ?? "")) found.push(cls);
+    for (const k of [...(n.children ?? []), ...(n.shadowRoots ?? [])]) walk(k);
+  };
+  walk(root);
+  await cdpS.detach();
+  return found.some((c) => !/\boff\b/.test(c));
+};
+check("R22 read_page/find/get_page_text/screenshot no mueven el cursor", !(await cursorShown(pgL)));
+const distL = /button "Elegir distribución"[^\n]*\[ref=(e\d+)\]/.exec(await tool("browser_read_page", { tabId: tabL }))?.[1];
+await tool("browser_hover", { tabId: tabL, target: distL });
+check("R22b una acción (hover) sí muestra el cursor", await cursorShown(pgL));
+r = await tool("browser_take_screenshot", { tabId: tabL, clean: true });
+const vis = await pgL.evaluate(() => document.querySelector("[data-fx-cursor]")?.style.visibility ?? "sin overlay");
+check("R23 captura clean: esconde el overlay y lo regresa", /Screenshot/.test(r) && vis === "", `visibility tras la captura: «${vis}»`);
+await tool("browser_tabs", { action: "close", tabId: tabL });
+
 // ── Página de registro con pago y acuerdo (Shopify Partners) ──
 r = await tool("browser_navigate", { tabId, url: `${BASE}/partners.html` });
 check("R20 avisa del pago y del acuerdo al llegar", /pide un pago \(«[^»]*19 USD/.test(r) && /Acuerdo de Partners/.test(r) && /detente/.test(r), r.split("\n").find((l) => /pide un pago|aceptar/.test(l))?.slice(0, 160) ?? r.slice(-200));

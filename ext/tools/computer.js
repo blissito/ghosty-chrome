@@ -53,7 +53,6 @@ export function computerTools({ confirmGate, host, cdp, exec, guardTab, cursor, 
         const { action } = input;
         const tabId = await guardTab(call);
         if (action === "screenshot") {
-          void cursor(tabId, "pulse", { label: "mirando…" });
           const saved = await capture(tabId);
           const shot = { data: saved.dataUrl.split(",")[1], mimeType: "image/jpeg" };
           return imageResult(shot, `Captura ${saved.width}×${saved.height} (px CSS) de ${saved.url}`);
@@ -154,7 +153,6 @@ export function computerTools({ confirmGate, host, cdp, exec, guardTab, cursor, 
       execute: timed("evaluate", async ({ function: fn, code, target }, call) => {
         const tabId = await guardTab(call);
         const src = String(fn ?? code ?? "");
-        void cursor(tabId, "pulse", { label: "javascript" });
         // Con target, el elemento se marca en el DOM y la función lo recibe en el mundo de la página.
         const sel = target ? (await resolveTarget(tabId, { target })).selector : null;
         const expr = `(async () => { const __v = (${src}); const __el = ${sel ? `document.querySelector(${JSON.stringify(sel)})` : "undefined"}; return typeof __v === "function" ? await __v(__el) : await __v; })()`;
