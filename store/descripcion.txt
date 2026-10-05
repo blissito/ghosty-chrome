@@ -1,0 +1,16 @@
+Ghosty le presta tu navegador a tu agente de Ghosty Studio.
+
+Tú le hablas desde el chat de ghosty.studio, la app de iPhone o la terminal, y él lo hace en tu Chrome con las sesiones que ya tienes abiertas: abre pestañas, lee la página, da clic, escribe, llena formularios, sube archivos y toma capturas.
+
+• Ves todo lo que hace: un borde lila y un cursor que señala cada paso.
+• Lo detienes cuando quieras con el botón Detener.
+• Sólo trabaja en las pestañas de su grupo «Ghosty»; tus demás pestañas no las toca.
+• Nunca escribe contraseñas.
+
+Para qué sirve:
+• Llenar formularios y trámites repetitivos.
+• Publicar en tus redes o actualizar tu tienda en línea.
+• Revisar tu sitio: consola, red y capturas para encontrar errores.
+• Sacar información de varias páginas y juntarla en un resumen.
+
+Requiere una cuenta de Ghosty Studio (ghosty.studio).

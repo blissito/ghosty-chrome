@@ -1,0 +1,11 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Subir video · tubo</title>
+<style>body{font:16px system-ui;margin:24px;max-width:640px} .drop{border:2px dashed #999;padding:30px;text-align:center;border-radius:12px} textarea{width:100%;height:80px} input[type=file]{display:none}</style></head>
+<body><main><h1>Subir video a tubo</h1>
+<div class="drop"><button type="button" id="pick" onclick="document.getElementById('f').click()">Seleccionar archivos</button><input type="file" id="f" accept="video/*"><p id="nombre">Ningún archivo</p></div>
+<label for="desc">Descripción</label><textarea id="desc"></textarea>
+<button type="button" id="pub" disabled>Publicar</button><p id="estado">Borrador</p></main>
+<script>
+const f=document.getElementById('f'),pub=document.getElementById('pub');
+f.addEventListener('change',()=>{document.getElementById('nombre').textContent=f.files[0]?.name+' · '+f.files[0]?.size+' bytes';pub.disabled=false;});
+pub.addEventListener('click',()=>{setTimeout(()=>{document.getElementById('estado').textContent='Publicado: '+(f.files[0]?.name)+' — '+document.getElementById('desc').value;},800);});
+</script></body></html>

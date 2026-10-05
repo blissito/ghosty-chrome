@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Banco de pruebas · Ghosty</title>
+<style>
+  :root {
+    --ink: #191a20;
+    --lila: #9a99ea;
+    --lila-2: #c9c8f6;
+    --fondo: #f4f3ff;
+    --papel: #ffffff;
+    --menta: #85ddcb;
+    --ambar: #fbbf24;
+    --rojo: #f87171;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--fondo);
+    color: var(--ink);
+    font: 15px/1.35 ui-rounded, "SF Pro Rounded", system-ui, sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 14px;
+    overflow: hidden;
+  }
+  main {
+    width: 100%;
+    max-width: 440px;
+    max-height: 100%;
+    background: var(--papel);
+    border: 3px solid var(--ink);
+    border-radius: 22px;
+    box-shadow: 6px 6px 0 var(--ink);
+    padding: 16px 18px 18px;
+    display: grid;
+    gap: 11px;
+  }
+  header { display: flex; align-items: center; gap: 10px; }
+  header svg { flex: none; }
+  h1 { font-size: 21px; margin: 0; letter-spacing: -.01em; }
+  header p { margin: 0; font-size: 12.5px; color: #55566a; }
+  label { font-weight: 700; font-size: 13px; display: block; margin-bottom: 4px; }
+  .campo input[type=text], .campo input[type=password], select {
+    width: 100%;
+    font: inherit;
+    padding: 9px 11px;
+    border: 2.5px solid var(--ink);
+    border-radius: 12px;
+    background: var(--papel);
+    color: var(--ink);
+  }
+  .campo input:focus, select:focus { outline: none; box-shadow: 3px 3px 0 var(--lila); }
+  .fila { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .check {
+    display: flex; align-items: center; gap: 9px;
+    font-weight: 600; font-size: 14px; cursor: pointer;
+  }
+  .check input { width: 20px; height: 20px; accent-color: var(--lila); margin: 0; }
+  input[type=range] { width: 100%; accent-color: var(--lila); }
+  .rango { display: flex; align-items: center; gap: 10px; }
+  .rango output {
+    min-width: 34px; text-align: center; font-weight: 800;
+    background: var(--lila-2); border: 2.5px solid var(--ink); border-radius: 10px; padding: 2px 6px;
+  }
+  .acciones { display: grid; grid-template-columns: 1fr 1fr auto; gap: 9px; align-items: start; }
+  button {
+    font: inherit; font-weight: 800; cursor: pointer;
+    border: 2.5px solid var(--ink); border-radius: 12px;
+    padding: 9px 10px; color: var(--ink);
+    box-shadow: 3px 3px 0 var(--ink);
+    transition: transform .08s, box-shadow .08s;
+  }
+  button:active { transform: translate(3px, 3px); box-shadow: 0 0 0 var(--ink); }
+  #opciones { background: var(--papel); }
+  #contador { background: var(--menta); }
+  #borrar { background: var(--rojo); width: 46px; }
+  .menu-wrap { position: relative; }
+  #menu {
+    position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 2;
+    list-style: none; margin: 0; padding: 4px;
+    background: var(--papel); border: 2.5px solid var(--ink); border-radius: 12px;
+    box-shadow: 4px 4px 0 var(--ink);
+  }
+  #menu[hidden] { display: none; }
+  #menu li { padding: 7px 9px; border-radius: 8px; cursor: pointer; font-weight: 700; }
+  #menu li:hover { background: var(--lila-2); }
+  #elegido { margin: 0; font-size: 13px; color: #55566a; }
+  #elegido b { color: var(--ink); }
+  article {
+    background: var(--fondo); border: 2.5px dashed var(--lila); border-radius: 14px;
+    padding: 10px 12px;
+  }
+  article h2 { margin: 0 0 3px; font-size: 15px; }
+  article p { margin: 0 0 4px; font-size: 13px; }
+  article p:last-child { margin: 0; }
+  #aviso {
+    position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%);
+    background: var(--ambar); border: 2.5px solid var(--ink); border-radius: 12px;
+    box-shadow: 3px 3px 0 var(--ink); padding: 8px 14px; font-weight: 800;
+  }
+  #aviso[hidden] { display: none; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <!-- Ajolote plano: el «artículo» del banco habla de él -->
+    <svg width="46" height="46" viewBox="0 0 46 46" aria-hidden="true">
+      <g stroke="#191a20" stroke-width="2.5" stroke-linejoin="round">
+        <path d="M6 14c-3-3-3-7 0-8M6 22c-4 0-5-3-4-5M40 14c3-3 3-7 0-8M40 22c4 0 5-3 4-5" fill="none" stroke-linecap="round"/>
+        <ellipse cx="23" cy="24" rx="17" ry="15" fill="#f9b4d0"/>
+      </g>
+      <circle cx="16" cy="21" r="2.6" fill="#191a20"/>
+      <circle cx="30" cy="21" r="2.6" fill="#191a20"/>
+      <path d="M19 29c2 2 6 2 8 0" stroke="#191a20" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    </svg>
+    <div>
+      <h1>Banco de pruebas</h1>
+      <p>Aquí Ghosty practica clics, formularios y menús.</p>
+    </div>
+  </header>
+
+  <div class="fila">
+    <div class="campo"><label for="nombre">Nombre</label><input id="nombre" type="text" autocomplete="off"></div>
+    <div class="campo">
+      <label for="estado">Estado</label>
+      <select id="estado">
+        <option>Elige…</option><option>Ciudad de México</option><option>Oaxaca</option><option>Jalisco</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="fila">
+    <div class="campo"><label for="clave">Contraseña</label><input id="clave" type="password" autocomplete="off"></div>
+    <div>
+      <label for="cantidad">Cantidad</label>
+      <div class="rango">
+        <input id="cantidad" type="range" min="1" max="10" value="2">
+        <output id="cantidad-v" for="cantidad">2</output>
+      </div>
+    </div>
+  </div>
+
+  <label class="check"><input type="checkbox" id="terminos"> Acepto los términos</label>
+
+  <div class="acciones">
+    <div class="menu-wrap">
+      <button id="opciones" type="button" aria-haspopup="true" aria-expanded="false">Opciones ▾</button>
+      <ul id="menu" hidden>
+        <li data-v="Exportar">📤 Exportar</li>
+        <li data-v="Imprimir">🖨️ Imprimir</li>
+      </ul>
+    </div>
+    <button id="contador" type="button">Contador: 0</button>
+    <button id="borrar" type="button" aria-label="Borrar cuenta" title="Borrar cuenta">🗑</button>
+  </div>
+  <p id="elegido">Elegido del menú: <b>nada</b></p>
+
+  <article>
+    <h2>El ajolote</h2>
+    <p>El ajolote (Ambystoma mexicanum) es un anfibio endémico de Xochimilco. Puede regenerar extremidades, corazón y partes del cerebro.</p>
+    <p>Su población silvestre cayó más de 90 % desde 1998 por la contaminación del agua y las especies invasoras como la tilapia.</p>
+  </article>
+</main>
+<div id="aviso" hidden></div>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+  const aviso = (txt) => {
+    $("aviso").textContent = txt;
+    $("aviso").hidden = false;
+    clearTimeout(aviso.t);
+    aviso.t = setTimeout(() => ($("aviso").hidden = true), 1800);
+  };
+  $("cantidad").addEventListener("input", (e) => ($("cantidad-v").value = e.target.value));
+  $("opciones").addEventListener("click", () => {
+    const abierto = $("menu").hidden;
+    $("menu").hidden = !abierto;
+    $("opciones").setAttribute("aria-expanded", String(abierto));
+  });
+  $("menu").addEventListener("click", (e) => {
+    const li = e.target.closest("li");
+    if (!li) return;
+    $("elegido").innerHTML = `Elegido del menú: <b>${li.dataset.v}</b>`;
+    $("menu").hidden = true;
+    $("opciones").setAttribute("aria-expanded", "false");
+  });
+  let n = 0;
+  $("contador").addEventListener("click", () => ($("contador").textContent = `Contador: ${++n}`));
+  $("borrar").addEventListener("click", () => aviso("🗑 Cuenta borrada (de mentiritas)"));
+  $("terminos").addEventListener("change", (e) => e.target.checked && aviso("✅ Términos aceptados"));
+</script>
+</body>
+</html>

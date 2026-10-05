@@ -1,0 +1,13 @@
+import puppeteer from "puppeteer-core";
+import { mkdtempSync, readFileSync } from "node:fs";
+import { tmpdir, homedir } from "node:os";
+import { join } from "node:path";
+const d = JSON.parse(readFileSync(process.env.ACC, "utf8"));
+const b = await puppeteer.launch({ executablePath: join(homedir(), ".cache/puppeteer/chrome/mac_arm-139.0.7258.66/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing"), headless: "new", userDataDir: mkdtempSync(join(tmpdir(), "kc-")), args: [`--disable-extensions-except=${process.cwd()}/ext`, `--load-extension=${process.cwd()}/ext`] });
+await b.waitForTarget((t) => t.type() === "service_worker");
+const [p] = await b.pages();
+await p.setCookie({ name: "gs_session", value: d.cookie, domain: "www.ghosty.studio", path: "/", httpOnly: true, secure: true, sameSite: "Lax" });
+await p.goto("https://www.ghosty.studio/c", { waitUntil: "networkidle2" });
+console.log("abierto");
+await new Promise((r) => setTimeout(r, Number(process.env.MS ?? 240000)));
+await b.close();

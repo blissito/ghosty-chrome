@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><title>Editor de lienzo</title>
+<style>body{margin:0} canvas{display:block}</style></head>
+<body>
+<canvas id="c" width="1000" height="700"></canvas>
+<script>
+// App de puro canvas (tipo Figma/Canva): no hay DOM accesible adentro.
+const c = document.getElementById("c"), x = c.getContext("2d");
+let clicks = [];
+function paint() { x.fillStyle = "#f4f1ff"; x.fillRect(0, 0, 1000, 700); x.fillStyle = "#6d28d9"; x.fillRect(100, 100, 220, 80); x.fillStyle = "#fff"; x.font = "24px system-ui"; x.fillText("Botón pintado", 125, 150); for (const [a, b] of clicks) { x.fillStyle = "#16a34a"; x.beginPath(); x.arc(a, b, 10, 0, 7); x.fill(); } }
+c.addEventListener("click", (e) => { clicks.push([e.offsetX, e.offsetY]); if (e.offsetX > 100 && e.offsetX < 320 && e.offsetY > 100 && e.offsetY < 180) document.title = "Editor de lienzo · botón pulsado"; paint(); });
+paint();
+</script>
+</body></html>

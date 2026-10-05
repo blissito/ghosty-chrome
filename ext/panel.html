@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ghosty</title>
+  <link rel="icon" href="icons/icon-32.png" />
+  <link rel="stylesheet" href="panel.css" />
+</head>
+<body>
+  <header>
+    <strong class="brand"><img src="icons/flama.svg" alt="" width="22" height="22" /> Ghosty</strong>
+    <span id="dot" class="dot off" aria-hidden="true"></span>
+  </header>
+  <main>
+    <p id="status" class="big">Conectando…</p>
+    <p id="update" class="update" hidden><span id="update-msg"></span> <a id="update-link" target="_blank" rel="noopener">Actualiza: descarga…</a></p>
+    <p id="reason" class="muted" hidden></p>
+    <dl>
+      <dt>Lo usa</dt><dd id="client">Ghosty</dd>
+      <dt>Ahora</dt><dd id="busy">—</dd>
+      <dt>Último paso</dt><dd id="last">—</dd>
+      <dt>Terminal</dt><dd id="native">—</dd>
+    </dl>
+    <button id="stop" class="stop" type="button">■ Detener</button>
+    <p class="muted small">La conversación vive en tu agente (chat, app o terminal)</p>
+    <details id="connect">
+      <summary>Conectar la terminal</summary>
+      <p class="muted small">Pega esto en tu terminal:</p>
+      <pre id="mcp">…</pre>
+      <button id="copy" class="ghost" type="button">Copiar</button>
+    </details>
+    <details>
+      <summary>Servidor</summary>
+      <form id="gs-form"><input id="gs" autocomplete="off" /><button class="ghost">Guardar</button></form>
+    </details>
+  </main>
+  <script type="module" src="panel.js"></script>
+</body>
+</html>

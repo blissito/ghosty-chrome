@@ -1,0 +1,12 @@
+node_modules/
+.DS_Store
+.env*
+# Privado: capturas de cuentas reales, notas entre sesiones, credenciales del revisor de la tienda
+evidencia/
+inbox.md
+outbox.md
+store/instrucciones-*.txt
+# Artefactos de build
+store/build/
+store/manual/
+store/*.zip

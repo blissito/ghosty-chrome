@@ -1,0 +1,56 @@
+=== UN SOLO PROPÓSITO ===
+Ghosty permite que el agente de Ghosty Studio de la persona opere su propio navegador Chrome cuando ella se lo pide desde Ghosty Studio (chat web, app móvil o terminal): navegar, leer páginas y actuar en ellas (clic, escribir, llenar formularios, subir archivos, tomar capturas) con las sesiones que ya tiene abiertas. La extensión no tiene chat propio: sólo ejecuta lo que el agente pide y muestra en pantalla qué está haciendo.
+
+=== sidePanel ===
+Muestra el estado de la conexión con Ghosty Studio, el último paso ejecutado y el botón Detener para cortar la tarea en cualquier momento.
+
+=== scripting ===
+Lee la estructura de la página (árbol de accesibilidad) para que el agente sepa qué hay en pantalla, y pinta el borde y el cursor que muestran a la persona qué está haciendo el agente.
+
+=== tabs ===
+Abrir, listar, enfocar y cerrar las pestañas en las que trabaja el agente, y conocer su URL y título para decidir el siguiente paso.
+
+=== tabGroups ===
+Agrupa las pestañas del agente en un grupo llamado «Ghosty» para que trabaje sólo ahí y no toque las demás pestañas de la persona.
+
+=== debugger ===
+Envía clics y teclas reales (Chrome DevTools Protocol, Input.dispatch*) que las aplicaciones web modernas sí reciben (React, menús, canvas), sube archivos a un input de tipo file (DOM.setFileInputFiles) y, cuando la persona pide revisar su sitio, lee la consola y las peticiones de red. Sólo se adjunta a las pestañas del grupo Ghosty mientras hay una tarea y se suelta a los 30 segundos de terminar o al pulsar Detener.
+
+=== storage ===
+Guarda la configuración de la conexión con Ghosty Studio y las preferencias de la persona.
+
+=== downloads ===
+Guarda en la carpeta de Descargas la grabación (GIF) de una tarea cuando la persona la pide.
+
+=== offscreen ===
+Mantiene la conexión con Ghosty Studio desde un documento offscreen, porque el service worker de Manifest V3 se duerme y pierde la conexión; sin ella el agente no puede enviar instrucciones a la extensión.
+
+=== alarms ===
+Revisa cada 30 segundos que la conexión con Ghosty Studio siga viva y la reabre si el service worker se reinició.
+
+=== webNavigation ===
+Sabe cuándo termina de verdad una navegación (onCompleted) para no leer ni actuar en una página a medio cargar después de abrir una URL o dar un clic.
+
+=== notifications ===
+Avisa a la persona cuando el agente terminó una tarea en una pestaña que no está viendo, y cuando el agente llega a una página que pide iniciar sesión (el agente nunca teclea contraseñas: la persona inicia sesión y el agente sigue).
+
+=== nativeMessaging ===
+Si la persona usa su agente desde la terminal de su propia computadora, la extensión se comunica con el programa local de Ghosty (host nativo «studio.ghosty.browser», instalado por la persona) para ejecutar los pasos sin pasar por internet. Sin ese programa instalado, el permiso no hace nada.
+
+=== commands ===
+Atajos de teclado: abrir el panel de Ghosty y detener al agente al instante.
+
+=== Permiso de host ===
+El agente trabaja en el sitio que la persona le indique, que puede ser cualquiera (su tienda, sus redes, su propio sitio), así que necesita leer y actuar en cualquier URL. La captura de pantalla de la pestaña también exige acceso a todos los sitios. La extensión sólo actúa en las pestañas del grupo Ghosty y sólo cuando la persona le pide una tarea.
+
+=== ¿Código remoto? ===
+Marca: No, no estoy usando código remoto.
+(Todo el JS y el WASM van dentro del paquete; el servidor sólo manda instrucciones como «clic en tal elemento», no código.)
+
+=== USO DE DATOS: marca ===
+[x] Historial web            (URL y título de las pestañas del grupo Ghosty durante una tarea)
+[x] Actividad del usuario    (clics y teclas que ejecuta el agente; red/consola si la persona pide revisar su sitio)
+[x] Contenido de sitios web  (texto, estructura y capturas de las páginas que opera)
+[ ] todo lo demás SIN marcar (identificación, salud, financiera, autenticación, comunicaciones, ubicación)
+
+=== CERTIFICACIONES: marca las 3 ===

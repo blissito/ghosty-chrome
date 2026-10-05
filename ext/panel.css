@@ -1,0 +1,28 @@
+:root { --bg: #0b0b0f; --ink: #f2f2f5; --muted: #8b8b98; --accent: #9a99ea; --line: #24242e; }
+* { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; background: var(--bg); color: var(--ink); font: 16px/1.5 system-ui, sans-serif; }
+header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+.brand { display: inline-flex; align-items: center; gap: 6px; }
+.dot { width: 12px; height: 12px; border-radius: 50%; }
+.dot.on { background: #8dcf6e; }
+.dot.busy { background: var(--accent); animation: p 1.2s ease-in-out infinite; }
+.dot.off { background: #f87171; }
+@keyframes p { 50% { opacity: .35; } }
+main { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.big { font-size: 18px; font-weight: 600; margin: 0; word-break: break-word; }
+.muted { color: var(--muted); margin: 0; }
+.small { font-size: 14px; }
+dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; margin: 0; }
+dt { color: var(--muted); }
+dd { margin: 0; white-space: pre-wrap; word-break: break-word; }
+button { padding: 10px 14px; font: inherit; border: 0; border-radius: 8px; background: var(--accent); color: #0b0b0f; cursor: pointer; }
+button.ghost { background: transparent; border: 1px solid var(--line); color: var(--ink); }
+button.stop { background: #b91c1c; color: #fff; font-weight: 600; }
+button:disabled { opacity: .4; cursor: default; }
+details summary { cursor: pointer; color: var(--muted); }
+pre { white-space: pre-wrap; word-break: break-all; background: #17171f; border: 1px solid var(--line); border-radius: 6px; padding: 8px; font: 12px ui-monospace, monospace; }
+form { display: flex; gap: 6px; margin-top: 6px; }
+input { flex: 1; padding: 8px 10px; font: inherit; border-radius: 6px; border: 1px solid var(--line); background: #17171f; color: var(--ink); }
+@media (prefers-reduced-motion: reduce) { .dot.busy { animation: none; } }
+.update { background: #fff4d6; border: 1px solid #e0b84a; border-radius: 8px; padding: 8px 10px; font-size: 13px; }
+.update a { font-weight: 600; }

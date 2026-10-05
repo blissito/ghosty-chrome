@@ -1,0 +1,24 @@
+import puppeteer from "puppeteer-core";
+import http from "node:http";
+import { mkdtempSync, readFileSync } from "node:fs";
+import { tmpdir, homedir } from "node:os";
+import { join } from "node:path";
+const sess = JSON.parse(readFileSync(process.env.SESS, "utf8"));
+const auth = { authorization: `Bearer ${sess.token}`, "content-type": "application/json" };
+const PAGE = readFileSync("scripts/fixtures/banco.html");
+const srv = http.createServer((q, r) => r.writeHead(200, { "content-type": "text/html" }).end(PAGE));
+await new Promise((r) => srv.listen(5199, "127.0.0.1", r));
+const b = await puppeteer.launch({ executablePath: join(homedir(), ".cache/puppeteer/chrome/mac_arm-139.0.7258.66/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing"), headless: "new", userDataDir: mkdtempSync(join(tmpdir(), "d-")), args: [`--disable-extensions-except=${process.cwd()}/ext`, `--load-extension=${process.cwd()}/ext`] });
+const sw = await b.waitForTarget((t) => t.type() === "service_worker");
+const [p] = await b.pages();
+await p.setCookie({ name: "gs_session", value: sess.cookie, domain: "localhost", path: "/" });
+await p.goto("http://127.0.0.1:5199/");
+const panel = await b.newPage();
+await panel.goto(`chrome-extension://${new URL(sw.url()).host}/panel.html`);
+await p.bringToFront();
+for (let i = 0; i < 60; i++) { const s = await (await fetch("http://localhost:5180/api/browser/call", { headers: auth })).json(); if (s.connected) break; await new Promise((r) => setTimeout(r, 500)); }
+const call = async (tool, input) => (await (await fetch("http://localhost:5180/api/browser/call", { method: "POST", headers: auth, body: JSON.stringify({ tool, input }) })).json());
+const r = await call("read_page", {});
+console.log(String(r.result ?? r.error).slice(0, 1500));
+console.log((await b.pages()).map((x) => x.url()));
+await b.close(); srv.close();

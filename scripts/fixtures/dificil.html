@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><title>Casos difíciles</title>
+<style>body{font:16px system-ui;margin:24px} iframe{width:520px;height:160px;border:1px solid #999}</style></head>
+<body>
+<h1>Casos difíciles</h1>
+<h2>Iframe de otro dominio</h2>
+<iframe id="marco" title="Panel embebido" src="http://localhost:5197/marco.html"></iframe>
+<h2>Shadow DOM abierto</h2>
+<tarjeta-sombra></tarjeta-sombra>
+<p>Estado sombra: <b id="estado-sombra">nada</b></p>
+<script>
+customElements.define("tarjeta-sombra", class extends HTMLElement {
+  connectedCallback() {
+    const r = this.attachShadow({ mode: "open" });
+    r.innerHTML = `<label>Nota en sombra <input id="nota" aria-label="Nota en sombra"></label> <button id="b">Botón sombra</button>`;
+    r.getElementById("b").addEventListener("click", () => {
+      document.getElementById("estado-sombra").textContent = "clic:" + r.getElementById("nota").value;
+    });
+  }
+});
+</script>
+</body></html>

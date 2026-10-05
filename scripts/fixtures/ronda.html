@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="es"><meta charset="utf-8"><title>Ronda YouTube</title>
+<style>body{font:16px system-ui;padding:20px} .chip{display:inline-block;background:#ddd;border-radius:12px;padding:2px 8px;margin:2px}
+[role=dialog]{position:fixed;inset:30% 20% auto;background:#fff;border:2px solid #000;padding:16px}</style>
+<h1>Ronda YouTube</h1>
+<!-- Botón custom sin nombre accesible (como ytcp-button): el texto está aria-hidden -->
+<div role="button" tabindex="0" id="sig" style="cursor:pointer"><span aria-hidden="true">Siguiente</span></div>
+<p id="estado-sig">-</p>
+<!-- Abre un diálogo con retraso, como «Publicar» → «Publicar de todas formas» -->
+<button id="rev">Revisar video</button>
+<!-- Editor enriquecido con texto previo -->
+<div id="titulo" contenteditable="true" role="textbox" aria-label="Título del video">Texto de fábrica que hay que borrar</div>
+<!-- Etiquetas: la coma crea un chip (sólo con tecla real) -->
+<div id="chips"></div>
+<input id="tags" aria-label="Etiquetas">
+<!-- Diálogos nativos, pestaña nueva, secreto y lista larga (sesión Shopify, 4-oct) -->
+<button id="desc">Desconectar servicio</button>
+<p id="estado-desc">-</p>
+<button id="luego">Avisar luego</button>
+<a href="/ronda.html?nueva=1" target="_blank">Abrir en otra pestaña</a>
+<label>Client secret <input id="secreto" value="shpss_FAKEtestNOTrealSECRETxyz"></label>
+<ul id="tarjetas"></ul>
+<button id="subir">Subir vídeo</button><input type="file" id="archivo" accept="video/*" hidden><p id="estado-archivo">-</p>
+<script>
+desc.onclick = () => (document.getElementById("estado-desc").textContent = confirm("¿Desconectar el servicio?") ? "aceptado" : "cancelado");
+luego.onclick = () => setTimeout(() => alert("Se terminó de procesar"), 1500);
+subir.onclick = () => archivo.click();
+archivo.onchange = () => (document.getElementById("estado-archivo").textContent = archivo.files[0]?.name ?? "-");
+const nombres = Array.from({ length: 50 }, (_, i) => (i === 41 ? "Shopify" : `Conector ${i + 1}`));
+for (const n of nombres) { const li = document.createElement("li"); li.innerHTML = `<button>${n}</button>`; tarjetas.append(li); }
+</script>
+<script>
+sig.onclick = () => (document.getElementById("estado-sig").textContent = "siguiente:ok");
+rev.onclick = () => setTimeout(() => {
+  const d = document.createElement("div");
+  d.setAttribute("role", "dialog");
+  d.setAttribute("aria-label", "Revisión pendiente");
+  d.innerHTML = '<p>Aún se está revisando.</p><button>Publicar de todas formas</button> <button>Volver</button>';
+  document.body.append(d);
+}, 800);
+tags.addEventListener("keydown", (e) => {
+  if (e.key !== "," && e.key !== "Enter") return;
+  e.preventDefault();
+  const v = tags.value.trim();
+  if (v) { const c = document.createElement("span"); c.className = "chip"; c.textContent = v; chips.append(c); }
+  tags.value = "";
+});
+</script>

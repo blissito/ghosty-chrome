@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><title>Banco de pruebas Ghosty</title>
+<style>body{font:16px system-ui;margin:24px;max-width:760px} .menu{position:relative;display:inline-block} .menu ul{display:none;position:absolute;background:#fff;border:1px solid #999;list-style:none;padding:4px;margin:0} .menu.open ul{display:block} .menu li{padding:6px 10px;cursor:pointer} canvas{border:1px solid #999}</style></head>
+<body>
+<main>
+<h1>Banco de pruebas</h1>
+<form id="f" onsubmit="event.preventDefault()">
+  <label for="nombre">Nombre</label> <input id="nombre" name="nombre"><br><br>
+  <label for="estado">Estado</label>
+  <select id="estado"><option value="">Elige…</option><option value="cdmx">Ciudad de México</option><option value="oax">Oaxaca</option><option value="jal">Jalisco</option></select><br><br>
+  <label><input type="checkbox" id="terminos"> Acepto los términos</label><br><br>
+  <label for="clave">Contraseña</label> <input id="clave" type="password"><br><br>
+  <label for="cantidad">Cantidad</label> <input id="cantidad" type="range" min="0" max="10" value="2"><br><br>
+</form>
+<div class="menu" id="menu"><span id="menu-btn" role="button" tabindex="0">Opciones ▾</span>
+  <ul><li id="exportar">Exportar</li><li>Imprimir</li></ul></div>
+<p>Elegido del menú: <b id="elegido">nada</b></p>
+<button id="contador" type="button">Contador: <span id="n">0</span></button>
+<button type="button" id="borrar-cuenta" aria-label="Borrar cuenta">🗑</button>
+<article><h2>Artículo</h2><p>El ajolote (Ambystoma mexicanum) es un anfibio endémico de Xochimilco. Puede regenerar extremidades, corazón y partes del cerebro.</p><p>Su población silvestre cayó más de 90 % desde 1998 por la contaminación del agua y las especies invasoras como la tilapia.</p></article>
+</main>
+<script>
+// Menú que SÓLO abre con un pointerdown trusted (como Radix/Headless UI): el.click() no lo abre.
+const menu = document.getElementById("menu");
+document.getElementById("menu-btn").addEventListener("pointerdown", (e) => { if (e.isTrusted) menu.classList.toggle("open"); });
+document.getElementById("exportar").addEventListener("pointerup", (e) => { if (e.isTrusted) { document.getElementById("elegido").textContent = "Exportar"; menu.classList.remove("open"); } });
+// Contador que sólo cuenta clics trusted.
+document.getElementById("contador").addEventListener("click", (e) => { if (e.isTrusted) document.getElementById("n").textContent = String(+document.getElementById("n").textContent + 1); });
+let k = 0;
+setInterval(() => { console.error(`falla-pagos-${++k}: timeout al cobrar`); fetch(`/api/ping?k=${k}`).catch(() => {}); }, 1500);
+console.log("banco listo");
+</script>
+</body></html>
