@@ -766,8 +766,8 @@ const TAB_PARAM = { type: "number", description: "Pestaña donde actuar (de tabs
 
 /**
  * @param {object} host
- * @param {() => Promise<number>} host.targetTab  id de la pestaña que maneja el agente
- * @param {(tabId: number) => void} host.setTargetTab
+ * @param {(session?: string) => Promise<number>} host.targetTab  id de la pestaña que maneja el agente (cada session la suya)
+ * @param {(tabId: number, session?: string) => void} host.setTargetTab
  * @param {() => AbortSignal | null} host.signal  se aborta con «Detener»
  * @param {(q: {system: string, user: string}) => Promise<string>} host.complete  subllamada barata (find)
  * @param {boolean} host.vision  el agente ve imágenes (Claude Code sí; si no, las capturas sólo se guardan)
@@ -792,7 +792,7 @@ export function buildTools(host) {
       call.tab = id;
       return id;
     }
-    const id = await host.targetTab();
+    const id = await host.targetTab(call?.session);
     if (call) call.tab = id;
     return id;
   };
@@ -839,7 +839,7 @@ export function buildTools(host) {
   // pestaña actuó; la respuesta lo dice siempre (texto: «[tab N]»; objeto: `tabId`).
   const timed = (name, fn) => async (input, ctx) => {
     const t = performance.now();
-    const call = { tabId: input?.tabId ?? null, signal: ctx?.signal ?? null, tab: null, input: input ?? {} };
+    const call = { tabId: input?.tabId ?? null, signal: ctx?.signal ?? null, session: ctx?.session ?? "", tab: null, input: input ?? {} };
     try {
       checkAbort(call);
       const r = await fn(input ?? {}, call);

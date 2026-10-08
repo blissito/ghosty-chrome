@@ -13,7 +13,7 @@ modelo.
 ## Qué hace
 
 27 tools `browser_*` (navegar, leer la página con refs, `find`, clic/teclado trusted por CDP, formularios,
-subir archivos sin abrir el selector, capturas, pestañas en paralelo con `tabId`, consola y red, GIF,
+subir archivos sin abrir el selector, capturas, una pestaña por agente (`session`) y más pestañas en paralelo con `tabId`, consola y red, GIF,
 diálogos nativos). Nombres y descripciones adoptados de Playwright MCP (Apache-2.0,
 `ext/vendor/playwright/NOTICE`).
 

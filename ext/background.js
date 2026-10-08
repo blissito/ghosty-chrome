@@ -23,7 +23,7 @@ const DEFAULT_GS = "http://localhost:5180";
 const GHOSTY_BROWSER_PROTOCOL = 3;
 // Qué código corre de verdad: hash del código (cambia con cada edición aunque la versión del manifest
 // no) y las capacidades, para que el agente y la persona sepan si la recarga ya tomó lo nuevo.
-const CAPABILITIES = ["tabId", "dialogs", "fileChooser", "newTabNotice", "maskSecrets", "fastNav"];
+const CAPABILITIES = ["tabId", "dialogs", "fileChooser", "newTabNotice", "maskSecrets", "fastNav", "sessions"];
 const buildId = (async () => {
   try {
     const files = ["background.js", "tools.js", "cdp.js", "guard.js", "tools/tabs.js", "tools/computer.js", "tools/record.js"];
@@ -49,7 +49,21 @@ function publish(patch) {
 }
 
 // ── Host de las tools en el service worker ──
-let pinnedTab = null;
+// Pestaña de cada agente: `session` (una por conversación de gs o por proceso MCP) → tabId. "" = los
+// que no mandan session (protocolo viejo). Va a storage.session porque el SW se duerme.
+const sessions = new Map();
+const sessionsReady = chrome.storage.session
+  .get("sessions")
+  .then(({ sessions: s }) => {
+    for (const [k, v] of Object.entries(s ?? {})) if (!sessions.has(k)) sessions.set(k, v);
+  })
+  .catch(() => {});
+const saveSessions = () => chrome.storage.session.set({ sessions: Object.fromEntries(sessions) }).catch(() => {});
+chrome.tabs.onRemoved.addListener((tabId) => {
+  let changed = false;
+  for (const [k, v] of sessions) if (v === tabId) (sessions.delete(k), (changed = true));
+  if (changed) void saveSessions();
+});
 const frame = { state: "off", tabId: null };
 let frameTimer = null;
 const running = new Map(); // id → AbortController de cada comando en vuelo
@@ -62,34 +76,50 @@ const isChatSurface = (url) => /^https:\/\/(www\.)?ghosty\.studio\/(c|app)(\/|\?
 
 // Sin tabId explícito el agente trabaja en SU grupo «Ghosty»: la pestaña activa del grupo o la más
 // reciente; si no hay grupo, abre una pestaña nueva. Nunca toma la pestaña que la persona está usando.
-async function pickTargetTab() {
+// Una pestaña que ya es de otro agente no se toma: el segundo agente abre la suya en segundo plano.
+async function pickTargetTab(session) {
   const win = await chrome.windows.getLastFocused({ windowTypes: ["normal"] }).catch(() => null);
   const windowId = win?.id ?? (await chrome.windows.getCurrent().catch(() => null))?.id;
   if (windowId == null) return null;
+  const taken = new Set([...sessions].filter(([k]) => k !== session).map(([, v]) => v));
   const groupId = await groupOf(windowId);
   if (groupId != null) {
-    const tabs = await chrome.tabs.query({ groupId });
+    const tabs = (await chrome.tabs.query({ groupId })).filter((t) => !taken.has(t.id));
     const pick = tabs.find((t) => t.active) ?? tabs.sort((a, b) => (b.lastAccessed ?? 0) - (a.lastAccessed ?? 0))[0];
     if (pick) return pick.id;
   }
-  const tab = await chrome.tabs.create({ windowId, url: "about:blank", active: true });
+  const tab = await chrome.tabs.create({ windowId, url: "about:blank", active: taken.size === 0 });
   return tab.id;
 }
-async function targetTab() {
-  if (pinnedTab != null) {
+// Las elecciones van una a la vez: dos agentes que arrancan juntos no agarran la misma pestaña.
+let picking = Promise.resolve();
+async function targetTab(session = "") {
+  await sessionsReady;
+  const mine = sessions.get(session);
+  if (mine != null) {
     try {
-      await chrome.tabs.get(pinnedTab);
-      return pinnedTab;
+      await chrome.tabs.get(mine);
+      return mine;
     } catch {}
   }
-  pinnedTab = await pickTargetTab();
-  if (pinnedTab == null) throw new Error("No hay ninguna pestaña abierta en Chrome.");
-  void ensureInGroup(pinnedTab);
-  return pinnedTab;
+  const pick = picking.then(async () => {
+    const again = sessions.get(session);
+    if (again != null && (await chrome.tabs.get(again).catch(() => null))) return again;
+    const id = await pickTargetTab(session);
+    if (id == null) throw new Error("No hay ninguna pestaña abierta en Chrome.");
+    sessions.set(session, id);
+    void saveSessions();
+    void ensureInGroup(id);
+    return id;
+  });
+  picking = pick.catch(() => {});
+  return pick;
 }
-function setTargetTab(id) {
+function setTargetTab(id, session = "") {
   if (frame.tabId != null && frame.tabId !== id) void paintFrame(frame.tabId, "off");
-  pinnedTab = id;
+  if (id == null) sessions.delete(session);
+  else sessions.set(session, id);
+  void saveSessions();
 }
 
 const tools = buildTools({
@@ -114,9 +144,9 @@ const byName = new Map(tools.map((t) => [t.name, t]));
 const toolList = tools.map(({ name, description, inputSchema }) => ({ name, description, inputSchema }));
 
 // Borde lila mientras llegan comandos; se apaga a los 4 s sin actividad.
-async function frameOn(tabHint) {
+async function frameOn(tabHint, session) {
   clearTimeout(frameTimer);
-  const tabId = tabHint ?? (await targetTab().catch(() => null));
+  const tabId = tabHint ?? (await targetTab(session).catch(() => null));
   if (tabId == null) return;
   if (frame.tabId != null && frame.tabId !== tabId) void paintFrame(frame.tabId, "off");
   frame.state = "work";
@@ -198,7 +228,9 @@ chrome.notifications.onClicked.addListener((nid) => {
 // distintas (`tabId`), en paralelo — dos agentes no se esperan ni se pisan.
 const queues = new Map();
 function handleCommand(cmd, onProgress) {
-  const key = cmd.input?.tabId != null ? `tab:${cmd.input.tabId}` : "actual";
+  cmd.session = typeof cmd.session === "string" ? cmd.session.slice(0, 80) : "";
+  // Sin tabId, cada agente (session) tiene su fila y su pestaña: dos conversaciones no se esperan.
+  const key = cmd.input?.tabId != null ? `tab:${cmd.input.tabId}` : cmd.session ? `s:${cmd.session}` : "actual";
   const prev = queues.get(key) ?? Promise.resolve();
   const done = prev.then(() => runCommand(cmd, onProgress));
   const tail = done.catch(() => {});
@@ -229,7 +261,7 @@ const PHASE = {
   gif_creator: "armando el GIF",
   tabs: "abriendo la pestaña",
 };
-async function runCommand({ id, tool, input, client }, onProgress) {
+async function runCommand({ id, tool, input, client, session }, onProgress) {
   const t0 = Date.now();
   let result;
   let error;
@@ -238,11 +270,11 @@ async function runCommand({ id, tool, input, client }, onProgress) {
   } else if (!byName.has(tool)) {
     error = `tool desconocida: ${tool}`;
   } else {
-    publish({ client, busy: tool });
+    publish({ client, session: session || null, busy: tool });
     burst++;
     clearTimeout(debuggerTimer);
     // `tabs` no pinta el borde de antemano: pedir «la actual» abriría una pestaña en blanco.
-    if (tool !== "tabs" || input?.tabId != null) await frameOn(input?.tabId != null ? Number(input.tabId) : undefined);
+    if (tool !== "tabs" || input?.tabId != null) await frameOn(input?.tabId != null ? Number(input.tabId) : undefined, session);
     const abort = new AbortController();
     running.set(id, abort);
     const limit = timeoutFor(tool, input);
@@ -263,7 +295,7 @@ async function runCommand({ id, tool, input, client }, onProgress) {
     }, 1000);
     try {
       result = await Promise.race([
-        byName.get(tool).execute(input ?? {}, { signal: abort.signal }),
+        byName.get(tool).execute(input ?? {}, { signal: abort.signal, session }),
         new Promise((_, reject) => {
           timer = setTimeout(() => {
             abort.abort();
@@ -313,7 +345,7 @@ async function runCommand({ id, tool, input, client }, onProgress) {
   }
   const ms = Date.now() - t0;
   const failed = !!error || !!result?.error;
-  publish({ busy: null, lastStep: { tool, client, ms, ok: !failed, at: Date.now(), detail: String(error ?? result?.error ?? "").slice(0, 140) } });
+  publish({ busy: null, lastStep: { tool, client, session: session || null, ms, ok: !failed, at: Date.now(), detail: String(error ?? result?.error ?? "").slice(0, 140) } });
   return { id, result, error };
 }
 
@@ -406,7 +438,7 @@ function connectNative() {
       return port.postMessage({ id: msg.id, result: { connected: true, via: "native", version: chrome.runtime.getManifest().version, build: await buildId, capabilities: CAPABILITIES, protocol: GHOSTY_BROWSER_PROTOCOL, gs: { status: state.status, email: state.email }, lastStep: state.lastStep, busy: state.busy } });
     }
     if (msg?.tool) {
-      const r = await handleCommand({ id: msg.id, tool: msg.tool, input: msg.input ?? {}, client: msg.client ?? "Ghosty (terminal)" }, (p) => {
+      const r = await handleCommand({ id: msg.id, tool: msg.tool, input: msg.input ?? {}, client: msg.client ?? "Ghosty (terminal)", session: msg.session }, (p) => {
         try {
           port.postMessage({ id: msg.id, progress: p });
         } catch {}

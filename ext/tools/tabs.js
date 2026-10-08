@@ -77,7 +77,7 @@ export function tabTools({ host, timed, waitForLoad, sleep, targetOf }) {
     const tab = await chrome.tabs.create({ windowId, url: abs, active: !background });
     await ensureInGroup(tab.id);
     // Sin `background` pasa a ser la pestaña actual; con él, se usa por su tabId.
-    if (!background) host.setTargetTab(tab.id);
+    if (!background) host.setTargetTab(tab.id, call.session);
     if (url) {
       await sleep(150);
       await waitForLoad(tab.id);
@@ -90,7 +90,7 @@ export function tabTools({ host, timed, waitForLoad, sleep, targetOf }) {
     {
       name: "tabs",
       description:
-        "List, create, close, or select a browser tab (sólo las del grupo «Ghosty»). `new` regresa el tabId de la pestaña nueva: pásalo como `tabId` a las demás tools para trabajar en ella sin estorbar a otro agente que use otra pestaña. Con `background: true` la abre sin cambiar la pestaña visible.",
+        "List, create, close, or select a browser tab (sólo las del grupo «Ghosty»). Cada agente ya tiene su propia pestaña (otros agentes no la pisan). `new` regresa el tabId de una pestaña más: pásalo como `tabId` a las demás tools para llevar varias tareas tuyas en paralelo. Con `background: true` la abre sin cambiar la pestaña visible.",
       inputSchema: {
         type: "object",
         properties: {
@@ -117,7 +117,7 @@ export function tabTools({ host, timed, waitForLoad, sleep, targetOf }) {
         if (!pick) return { error: `No hay esa pestaña en el grupo «Ghosty».\n${await describe(ref)}` };
         call.tab = pick.id;
         if (action === "select") {
-          host.setTargetTab(pick.id);
+          host.setTargetTab(pick.id, call.session);
           await chrome.tabs.update(pick.id, { active: true });
           return `### Open tabs\n${await describe({ tabId: pick.id })}`;
         }
@@ -125,7 +125,8 @@ export function tabTools({ host, timed, waitForLoad, sleep, targetOf }) {
           await chrome.tabs.remove(pick.id);
           if (pick.id === target) {
             const rest = await groupTabs(windowId);
-            host.setTargetTab(rest[0]?.id ?? null);
+            // Con session, la siguiente llamada elige una pestaña libre (rest[0] puede ser de otro agente).
+            host.setTargetTab(call.session ? null : (rest[0]?.id ?? null), call.session);
             if (rest[0] && !background) await chrome.tabs.update(rest[0].id, { active: true });
           }
           return `Closed tabId ${pick.id}`;
