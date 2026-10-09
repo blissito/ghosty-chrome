@@ -5,6 +5,7 @@ Tú le hablas desde el chat de ghosty.studio, la app de iPhone o la terminal, y 
 • Ves todo lo que hace: un borde lila y un cursor que señala cada paso.
 • Lo detienes cuando quieras con el botón Detener.
 • Sólo trabaja en las pestañas de su grupo «Ghosty»; tus demás pestañas no las toca.
+• Varios agentes a la vez: cada uno trabaja en su propia pestaña, en paralelo, sin pisarse.
 • Nunca escribe contraseñas.
 
 Para qué sirve:
