@@ -29,7 +29,7 @@ shutil.rmtree(OUT, ignore_errors=True)
 shutil.copytree(SRC, OUT, ignore=shutil.ignore_patterns(".DS_Store"))
 
 m = json.load(open(os.path.join(OUT, "manifest.json")))
-m["version"] = "1.0.0"
+m["version"] = "1.0.1"
 m["name"] = "Ghosty"
 m.pop("key", None)
 m["externally_connectable"]["matches"] = [x for x in m["externally_connectable"]["matches"] if "localhost" not in x]
